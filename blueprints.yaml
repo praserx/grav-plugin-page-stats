@@ -1,0 +1,29 @@
+name: Statistics
+slug: statistics
+type: plugin
+version: 1.0.0
+description: Adds a page statistics and upvote/downvote rating functionality to your site
+icon: bar-chart
+author:
+  name: Praser
+  email: praserx@gmail.com
+  url: https://github.com/praserx
+keywords: vote, upvote, downvote, stats
+license: MIT
+dependencies:
+  - { name: grav, version: ">=1.7.0" }
+  - { name: form, version: ">=6.0.0" }
+
+form:
+  validation: loose
+  fields:
+    enabled:
+      type: toggle
+      label: PLUGIN_ADMIN.PLUGIN_STATUS
+      highlight: 1
+      default: 0
+      options:
+        1: PLUGIN_ADMIN.ENABLED
+        0: PLUGIN_ADMIN.DISABLED
+      validate:
+        type: bool

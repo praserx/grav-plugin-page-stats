@@ -1,0 +1,50 @@
+{% extends 'partials/base.html.twig' %}
+
+{% if admin.route %}
+    {% set context = admin.page(true) %}
+{% endif %}
+
+{% block titlebar %}
+    <h1><i class="fa fa-fw fa-bar-chart"></i> {{ "PLUGIN_STATISTICS.STATISTICS"|tu }}</h1>
+{% endblock %}
+
+{% block content %}
+    <style>
+        th { background: #d9d9d9; }
+
+        .path { flex: 7 }
+        .views { flex: 1 }
+        .votes { flex: 1 }
+
+        .center {
+            margin: 0 auto;
+            text-align: center;
+            display: block;
+        }
+
+        .button:active { margin: 0 auto;}
+    </style>
+
+    <h1>Overall page statistics</h1>
+    <div class="admin-block">
+        <table>
+            <tbody class="js__comments-container">
+                <tr class="h">
+                    <th class="path">Path</th>
+                    <th class="views">Total views</th>
+                    <th class="votes">Votes</th>
+                </tr>
+                
+                {% for path, views in grav.twig.views %}
+                    <tr>
+                        <td class="path">{{ path }}</td>
+                        <td class="views">{{ views }}</td>
+                        <td class="votes"></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+
