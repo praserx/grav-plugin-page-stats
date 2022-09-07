@@ -35,11 +35,11 @@
                     <th class="likes">Likes</th>
                 </tr>
                 
-                {% for path, views in grav.twig.views %}
+                {% for path, data in grav.twig.views %}
                     <tr>
                         <td class="path">{{ path }}</td>
-                        <td class="views">{{ views }}</td>
-                        <td class="likes"></td>
+                        <td class="views">{{ data.views }}</td>
+                        <td class="likes">{{ data.likes }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

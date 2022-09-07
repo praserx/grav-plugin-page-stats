@@ -69,8 +69,13 @@ class StatisticsPlugin extends Plugin
             return;
         }
 
-        $this->grav['twig']->likes = $this->getLikesAll();
-        $this->grav['twig']->views = $this->getTotalsAll();
+        $views = $this->getTotalsAll();
+        foreach ($views as $url => $data) {
+            $summary = array('views' => $data, 'likes' => $this->getLikes($url));
+            $views[$url] = $summary;
+        }
+
+        $this->grav['twig']->views = $views;
     }
 
     public function initializeFrontend()
@@ -223,7 +228,7 @@ class StatisticsPlugin extends Plugin
         }
 
         if (array_key_exists($url, $this->likes_data)) {
-            return $this->likes_data[$url];
+            return count($this->likes_data[$url]);
         }
 
         return 0;
