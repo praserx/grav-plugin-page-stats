@@ -1,60 +1,33 @@
-{% if enable_comments_plugin %}
-    {% set scope = scope ?: 'data.' %}
+{% if enable_statistics_plugin %}
+    <script>
+    $(document).ready(function(){
+        var form = $('#like');
+        form.submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method'),
+                dataType: 'html',
+                data: form.serialize(),
+                success: function(result) {
+                    {# $('#form-result').html(result); #}
+                }
+            });
+        });
+    });
+    </script>
 
-    <h3>{{'PLUGIN_COMMENTS.ADD_COMMENT'|t}}</h3>
-
-    <form name="{{ grav.config.plugins.comments.form.name }}"
-          action="{{ grav.config.plugins.comments.form.action ?  base_url ~ grav.config.plugins.comments.form.action : page.url }}"
-          method="{{ grav.config.plugins.comments.form.method|upper|default('POST') }}">
-
-        {% for field in grav.config.plugins.comments.form.fields %}
-            {% set value = form.value(field.name) %}
-            {% if field.evaluateDefault %}
-                {% set value = evaluate(field.evaluateDefault) %}
-            {% endif %}
-            {% if config.plugins.login.enabled and grav.user.authenticated %}
-                {% if field.name == 'name' %}
-                    <input type="hidden" name="{{ (scope ~ field.name)|fieldName }}" value="{{grav.user.fullname}}">
-                {% elseif field.name == 'email' %}
-                    <input type="hidden" name="{{ (scope ~ field.name)|fieldName }}" value="{{grav.user.email}}">
-                {% else %}
-                    <div>
-                        {% include "forms/fields/#{field.type}/#{field.type}.html.twig" %}
-                    </div>
-                {% endif %}
-            {% else %}
-                <div>
-                    {% include "forms/fields/#{field.type}/#{field.type}.html.twig" %}
-                </div>
-            {% endif %}
-        {% endfor %}
-        {% include "forms/fields/formname/formname.html.twig" %}
-
+    <form id="like" name="{{ grav.config.plugins.statistics.form.name }}"
+          action="{{ user_like ? page.url ~ '/task:likes.dislike' : page.url ~ '/task:likes.like' }}"
+          method="{{ grav.config.plugins.statistics.form.method|upper|default('POST') }}">
         <div class="buttons">
-        {% for button in grav.config.plugins.comments.form.buttons %}
-            <button class="button" type="{{ button.type|default('submit') }}">{{ button.value|t|default('Submit') }}</button>
-        {% endfor %}
+            {% if user_like %}
+            <button class="button" type="submit">{{ 'PLUGIN_STATISTICS.DONT_LIKE_IT'|t|default('I don\'t like it anymore') }}</button>
+            {% else %}
+            <button class="button" type="submit">{{ 'PLUGIN_STATISTICS.LIKE_IT'|t|default('I like it') }}</button>
+            {% endif %}
         </div>
 
-        {{ nonce_field('form', 'form-nonce')|raw }}
+        {{ nonce_field('likes-form', 'likes-form-nonce')|raw }}
     </form>
-
-    <div class="alert">{{ form.message }}</div>
-
-    {% if grav.twig.comments|length %}
-
-        <h3>{{'PLUGIN_COMMENTS.COMMENTS'|t}}</h3>
-
-        <table>
-            {% for comment in comments|array_reverse %}
-            <tr>
-                <td>
-                    {{comment.text}}
-                    <br />
-                    {{'PLUGIN_COMMENTS.WRITTEN_ON'|t}} {{comment.date|e}} {{'PLUGIN_COMMENTS.BY'|t}} {{comment.author}}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
 {% endif %}

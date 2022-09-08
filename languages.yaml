@@ -1,3 +1,10 @@
 en:
   PLUGIN_STATISTICS:
     STATISTICS: Statistics
+    LIKE_IT: I like it
+    DONT_LIKE_IT: I don't like it anymore
+cs:
+  PLUGIN_STATISTICS:
+    STATISTICS: Statistiky
+    LIKE_IT: To se mi líbí
+    DONT_LIKE_IT: Už se mi to nelíbí
