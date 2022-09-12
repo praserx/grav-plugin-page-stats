@@ -155,6 +155,8 @@ class StatisticsPlugin extends Plugin
                 $this->updateLikes($path, $uid, self::DISLIKE);
                 break;
         }
+
+        $this->grav->redirect($uri->path());
     }
 
     private function calculatePluginEnabled() {
