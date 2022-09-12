@@ -2,13 +2,13 @@ name: Statistics
 slug: statistics
 type: plugin
 version: 1.0.0
-description: Adds a page statistics and upvote/downvote rating functionality to your site
+description: Adds a page statistics and like/dislike rating functionality to your site
 icon: bar-chart
 author:
   name: Praser
   email: praserx@gmail.com
   url: https://github.com/praserx
-keywords: vote, upvote, downvote, stats
+keywords: likes, like, dislike, stats
 license: MIT
 dependencies:
   - { name: grav, version: ">=1.7.0" }
