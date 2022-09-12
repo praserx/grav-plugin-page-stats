@@ -2,19 +2,9 @@
 
 The **Page Statistics Plugin** for [Grav](http://github.com/getgrav/grav) adds the ability to add simple page rating.
 
-# Installation
-
-The Comments plugin is easy to install with GPM.
-
-```
-$ bin/gpm install page-stats
-```
-
-Or clone from GitHub and put in the `user/plugins/page-stats` folder.
-
 # Usage
 
-Add `{% include 'partials/comments.html.twig' with {'page': page} %}` to the template file where you want to add comments.
+Add `{% include 'partials/stats.html.twig' %}` to the template file where you want to add comments.
 
 For example, in Antimatter, in `templates/item.html.twig`:
 
@@ -35,40 +25,16 @@ For example, in Antimatter, in `templates/item.html.twig`:
             </div>
         </div>
 
-        {% include 'partials/comments.html.twig' with {'page': page} %}
+        {% include 'partials/stats.html.twig' %}
     {% endblock %}
 
 {% endembed %}
 ```
 
-The comment form will appear on the blog post items matching the enabled routes.
+The like and dislike form/button will appear on the blog post items matching the enabled routes.
 
-To set the enabled routes, create a `user/config/plugins/comments.yaml` file, copy in it the contents of `user/plugins/comments/comments.yaml` and edit the `enable_on_routes` and `disable_on_routes` options according to your needs.
+To set the enabled routes, create a `user/config/plugins/statistics.yaml` file, copy in it the contents of `user/plugins/comments/statistics.yaml` and edit the `enable_on_routes` and `disable_on_routes` options according to your needs.
 
-> Make sure you configured the "Email from" and "Email to" email addresses in the Email plugin with your email address!
+# Where are the likes stored?
 
-# Enabling Recaptcha
-
-The plugin comes with Recaptcha integration. To make it work, create a `user/config/plugins/comments.yaml` file, copy in it the contents of `user/plugins/comments/comments.yaml` and uncomment the captcha form field and the captcha validation process.
-Make sure you add your own Recaptcha `site` and `secret` keys too.
-
-# Where are the comments stored?
-
-In the `user/data/comments` folder. They're organized by page route, so every page with a comment has a corresponding file. This enables a quick load of all the page comments.
-
-# Visualize comments
-
-When the plugin is installed and enabled, the `Comments` menu will appear in the Admin Plugin. From there you can see all the comments made in the last 7 days.
-
-Further improvements to the comments visualization will be added in the next releases.
-
-# Email notifications
-
-The plugin interacts with the Email plugin to send emails upon receiving a comment. Configure the Email plugin correctly, setting its "Email from" and "Email to" email addresses.
-
-# Things still missing
-
-- Allow to delete comments from the Admin Plugin
-- Ability to see all comments of a page in the Admin Plugin
-- Ability to reply to a comment from the Admin Plugin
-- Auto-fill the comment form when a user is logged in
+In the `log://popularity/likes.json` folder.

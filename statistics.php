@@ -17,19 +17,19 @@ use Symfony\Component\Yaml\Yaml;
 class StatisticsPlugin extends Plugin
 {
     protected $route = 'stats';
-    protected $enable = false;
+    protected $plugin_enabled = false;
     protected $page_stats_cache_id;
 
     protected $data_path;
     protected $totals_file;
-    protected $votes_file;
+    protected $likes_file;
     protected $totals_data;
-    protected $votes_data;
+    protected $likes_data;
 
     const TOTALS_FILE = 'totals.json';
-    const VOTES_FILE = 'votes.json';
-    const UP = true;
-    const DOWN = false;
+    const LIKES_FILE = 'likes.json';
+    const LIKE = true;
+    const DISLIKE = false;
 
     /**
      * @return array
@@ -44,7 +44,7 @@ class StatisticsPlugin extends Plugin
     public function onPluginsInitialized()
     {
         $this->data_path = Grav::instance()['locator']->findResource('log://popularity', true, true);
-        $this->votes_file = $this->data_path . '/' . self::VOTES_FILE;
+        $this->likes_file = $this->data_path . '/' . self::LIKES_FILE;
         $this->totals_file   = $this->data_path . '/' . self::TOTALS_FILE;
         
         if ($this->isAdmin()) {
@@ -69,23 +69,27 @@ class StatisticsPlugin extends Plugin
             return;
         }
 
-        $this->grav['twig']->votes = $this->getVotesAll();
-        $this->grav['twig']->views = $this->getTotalsAll();
+        $views = $this->getTotalsAll();
+        foreach ($views as $path => $data) {
+            $summary = array('views' => $data, 'likes' => $this->getLikes($path));
+            $views[$path] = $summary;
+        }
+
+        $this->grav['twig']->views = $views;
     }
 
     public function initializeFrontend()
     {
-        $this->calculateEnable();
+        $this->calculatePluginEnabled();
         $this->enable([
             'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
         ]);
 
-        if ($this->enable) {
+        if ($this->plugin_enabled) {
             $this->enable([
-                'onFormProcessed' => ['onFormProcessed', 0],
-                'onFormPageHeaderProcessed' => ['onFormPageHeaderProcessed', 0],
-                'onPageInitialized' => ['onPageInitialized', 10],
-                'onTwigSiteVariables' => ['onTwigSiteVariables', 0]
+                'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
+                'onTask.likes.like'    => ['likesController', 0],
+                'onTask.likes.dislike' => ['likesController', 0]
             ]);
         }
     }
@@ -110,51 +114,52 @@ class StatisticsPlugin extends Plugin
         $this->grav['admin']->dataTypesExcludedFromDataManagerPlugin[] = 'statistics';
     }
 
-    public function onFormPageHeaderProcessed(Event $event)
+    public function onTwigSiteVariables()
     {
-        $header = $event['header'];
-
-        if ($this->enable) {
-            if (!isset($header->form)) {
-                $header->form = $this->grav['config']->get('plugins.statistics.form');
-            }
-        }
-
-        $event->header = $header;
-    }
-
-    public function onTwigSiteVariables() {
         $path = $this->grav['uri']->path();
-        $enabled = $this->enable;
-        $votes = $this->getVotes($path);
+        $likes = $this->getLikes($path);
+        $user_like = $this->isUserLikePage($path);
         
-        $this->grav['twig']->twig_vars['enable_statistics_plugin'] = $enabled;
-        $this->grav['twig']->twig_vars['statistics'] = $votes; 
+        $this->grav['twig']->twig_vars['enable_statistics_plugin'] = $this->plugin_enabled;
+        $this->grav['twig']->twig_vars['likes'] = $likes;
+        $this->grav['twig']->twig_vars['user_like'] = $user_like;
     }
 
-    public function onFormProcessed(Event $event)
+    public function likesController()
     {
-        $form = $event['form'];
-        $action = $event['action'];
-        $params = $event['params'];
+        /** @var Uri $uri */
+        $uri = $this->grav['uri'];
+
+        $uid = "";
+        $path = $uri->path();
+        $task = $_POST['task'] ?? $uri->param('task');
 
         if (!$this->active) {
             return;
         }
 
-        $path = $this->grav['uri']->path();
+        if (isset($this->grav['user'])) {
+            $user = $this->grav['user'];
+            $uid = $user->authenticated ? $user->username : "";
+        }
 
-        switch ($action) {
-            case 'upvote':
-                $this->updateVotes($path, UP);
+        if (empty($uid)) {
+            return;
+        }
+
+        switch ($task) {
+            case 'likes.like':
+                $this->updateLikes($path, $uid, self::LIKE);
                 break;
-            case 'downvote':
-                $this->updateVotes($path, DOWN);
+            case 'likes.dislike':
+                $this->updateLikes($path, $uid, self::DISLIKE);
                 break;
         }
+
+        $this->grav->redirect($uri->path());
     }
 
-    private function calculateEnable() {
+    private function calculatePluginEnabled() {
         $uri = $this->grav['uri'];
 
         $disable_on_routes = (array) $this->config->get('plugins.statistics.disable_on_routes');
@@ -164,11 +169,11 @@ class StatisticsPlugin extends Plugin
 
         if (!in_array($path, $disable_on_routes)) {
             if (in_array($path, $enable_on_routes)) {
-                $this->enable = true;
+                $this->plugin_enabled = true;
             } else {
                 foreach($enable_on_routes as $route) {
                     if (Utils::startsWith($path, $route)) {
-                        $this->enable = true;
+                        $this->plugin_enabled = true;
                         break;
                     }
                 }
@@ -177,39 +182,71 @@ class StatisticsPlugin extends Plugin
     }
 
     /**
-     * @param string $url
+     * @param string $path
      * 
      */
-    protected function updateVotes(string $url, boolean $increase)
+    protected function updateLikes(string $path, string $uid, bool $action)
     {
-        if (!$this->votes_data) {
-            $this->votes_data = $this->getData($this->votes_file);
+        if (!$this->likes_data) {
+            $this->likes_data = $this->getData($this->likes_file);
         }
 
-        if (array_key_exists($url, $this->votes_data) && $increase) {
-            $this->votes_data[$url] = (int)$this->votes_data[$url] + 1;
-        } else if (!array_key_exists($url, $this->votes_data) && $increase) {
-            $this->votes_data[$url] = 1;
-        } else if (array_key_exists($url, $this->votes_data) && !$increase) {
-            $this->votes_data[$url] = (int)$this->votes_data[$url] - 1;
-        } else if (!array_key_exists($url, $this->votes_data) && !$increase) {
-            $this->votes_data[$url] = -1;
+        if (!array_key_exists($path, $this->likes_data)) {
+            $this->likes_data[$path] = array();
+            if ($action === self::LIKE) {
+                array_push($this->likes_data[$path], $uid);
+            }
+        } else {
+            if (($action === self::LIKE) && !in_array($uid, $this->likes_data[$path])) {
+                array_push($this->likes_data[$path], $uid);
+            } else if (($action === self::DISLIKE) && in_array($uid, $this->likes_data[$path])) {
+                $key = array_search($uid, $this->likes_data[$path]);
+                unset($this->likes_data[$path][$key]);
+            }
         }
 
-        file_put_contents($this->votes_file, json_encode($this->votes_data));
+        file_put_contents($this->likes_file, json_encode($this->likes_data));
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isUserLikePage(string $path)
+    {
+        $uid = "";
+        if (isset($this->grav['user'])) {
+            $user = $this->grav['user'];
+            $uid = $user->authenticated ? $user->username : "";
+        }
+
+        if (empty($uid)) {
+            return false;
+        }
+
+        if (!$this->likes_data) {
+            $this->likes_data = $this->getData($this->likes_file);
+        }
+
+        if (array_key_exists($path, $this->likes_data)) {
+            if (in_array($uid, $this->likes_data[$path])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * @return int
      */
-    protected function getVotes($url)
+    protected function getLikes(string $path)
     {
-        if (!$this->votes_data) {
-            $this->votes_data = $this->getData($this->votes_file);
+        if (!$this->likes_data) {
+            $this->likes_data = $this->getData($this->likes_file);
         }
 
-        if (array_key_exists($url, $this->votes_data)) {
-            return $this->votes_data[$url];
+        if (array_key_exists($path, $this->likes_data)) {
+            return count($this->likes_data[$path]);
         }
 
         return 0;
@@ -218,14 +255,14 @@ class StatisticsPlugin extends Plugin
     /**
      * @return array
      */
-    protected function getVotesAll()
+    protected function getLikesAll()
     {
-        if (!$this->votes_data) {
-            $this->votes_data = $this->getData($this->votes_file);
+        if (!$this->likes_data) {
+            $this->likes_data = $this->getData($this->likes_file);
         }
 
-        if (isset($this->votes_data)) {
-            return $this->votes_data;
+        if (isset($this->likes_data)) {
+            return $this->likes_data;
         }
 
         return [];
