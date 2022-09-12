@@ -1,33 +1,48 @@
 {% if enable_statistics_plugin %}
-    <script>
-    $(document).ready(function(){
-        var form = $('#like');
-        form.submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: form.attr('action'),
-                type: form.attr('method'),
-                dataType: 'html',
-                data: form.serialize(),
-                success: function(result) {
-                    {# $('#form-result').html(result); #}
-                }
-            });
-        });
-    });
-    </script>
+    <style>
+        .btns-flex-container {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            width: 100%;
+            text-align: center;
+            padding: 10px 10px;
+        }
+        .btns-box-likes {
+            padding: 0px 2px 0px 0px;
+        }
+        .btns-box-actions {
+            flex: 1;
+        }
+        .btns-box-actions .btn-likes {
+            border: 0px;
+            padding: 0px;
+            background-color: transparent;
+        }
+    </style>
 
-    <form id="like" name="{{ grav.config.plugins.statistics.form.name }}"
-          action="{{ user_like ? page.url ~ '/task:likes.dislike' : page.url ~ '/task:likes.like' }}"
-          method="{{ grav.config.plugins.statistics.form.method|upper|default('POST') }}">
-        <div class="buttons">
-            {% if user_like %}
-            <button class="button" type="submit">{{ 'PLUGIN_STATISTICS.DONT_LIKE_IT'|t|default('I don\'t like it anymore') }}</button>
-            {% else %}
-            <button class="button" type="submit">{{ 'PLUGIN_STATISTICS.LIKE_IT'|t|default('I like it') }}</button>
-            {% endif %}
+    <div class="{{ grav.config.plugins.statistics.classes }} btns-flex-container">
+        <div class="btns-box-likes">
+            <i class="fa fa-thumbs-up" aria-hidden="true"></i>&ensp;<span id="likes-cnt">{{ likes }}</span>
         </div>
+        <div class="btns-box-actions">
+        <form id="like" name="{{ grav.config.plugins.statistics.form.name }}"
+            action="{{ user_like ? page.url ~ '/task:likes.dislike' : page.url ~ '/task:likes.like' }}"
+            method="{{ grav.config.plugins.statistics.form.method|upper|default('POST') }}">
+            <div class="btns-likes">
+                {% if user_like %}
+                <button class="btn-likes btn-dont-like" type="submit">
+                {{ 'PLUGIN_STATISTICS.DONT_LIKE_IT'|t|default('I don\'t like it anymore') }}
+                </button>
+                {% else %}
+                <button class="btn-likes btn-like" type="submit">
+                {{ 'PLUGIN_STATISTICS.LIKE_IT'|t|default('I like it') }}
+                </button>
+                {% endif %}
+            </div>
 
-        {{ nonce_field('likes-form', 'likes-form-nonce')|raw }}
-    </form>
+            {{ nonce_field('likes-form', 'likes-form-nonce')|raw }}
+        </form>
+        </div>
+    </div>
 {% endif %}

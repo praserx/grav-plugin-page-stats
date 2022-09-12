@@ -3,5 +3,8 @@ enabled: true
 enable_on_routes: ['/']
 disable_on_routes: []
 
+classes: "col-12"
+classes-button-like: ""
+
 form:
     name: likes
