@@ -2,28 +2,25 @@
     <style>
         .btns-flex-container {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: stretch;
             width: 100%;
-            text-align: center;
-            padding: 10px 10px;
-        }
-        .btns-box-likes {
-            padding: 0px 2px 0px 0px;
+            text-align: left;
+            padding: 10px 0px;
         }
         .btns-box-actions {
             flex: 1;
-        }
-        .btns-box-actions .btn-likes {
-            border: 0px;
-            padding: 0px;
-            background-color: transparent;
+            padding: 10px 0px;
         }
     </style>
 
     <div class="{{ grav.config.plugins.statistics.classes }} btns-flex-container">
         <div class="btns-box-likes">
+            {% if likes == 0 %}
+            <i>{{ 'PLUGIN_STATISTICS.NO_REACTIONS'|t|default('There are no reactions yet') }}</i>
+            {% else %}
             <i class="fa fa-thumbs-up" aria-hidden="true"></i>&ensp;<span id="likes-cnt">{{ likes }}</span>
+            {% endif %}
         </div>
         <div class="btns-box-actions">
         <form id="like" name="{{ grav.config.plugins.statistics.form.name }}"
@@ -32,15 +29,14 @@
             <div class="btns-likes">
                 {% if user_like %}
                 <button class="btn-likes btn-dont-like" type="submit">
-                {{ 'PLUGIN_STATISTICS.DONT_LIKE_IT'|t|default('I don\'t like it anymore') }}
+                {{ 'PLUGIN_STATISTICS.REACTION_REVERSE'|t|default('I can\'t find it useful anymore') }}
                 </button>
                 {% else %}
-                <button class="btn-likes btn-like" type="submit">
-                {{ 'PLUGIN_STATISTICS.LIKE_IT'|t|default('I like it') }}
+                <button class="btn-likes btn-like" type="submit" title="{{ 'PLUGIN_STATISTICS.REACTION_TOOLTIP'|t|default('Thanks! It is useful') }}">
+                <i class="fa fa-thumbs-up" aria-hidden="true"></i>&ensp;{{ 'PLUGIN_STATISTICS.REACT'|t|default('React!') }}
                 </button>
                 {% endif %}
             </div>
-
             {{ nonce_field('likes-form', 'likes-form-nonce')|raw }}
         </form>
         </div>

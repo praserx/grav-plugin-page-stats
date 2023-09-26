@@ -59,6 +59,10 @@ class StatisticsPlugin extends Plugin
         /** @var Uri $uri */
         $uri = $this->grav['uri'];
 
+        /** @var Pages $pages */
+        $pages = Grav::instance()['pages'];
+        $pages->enablePages();
+
         $this->enable([
             'onTwigTemplatePaths' => ['onTwigAdminTemplatePaths', 0],
             'onAdminMenu' => ['onAdminMenu', 0],
@@ -71,7 +75,10 @@ class StatisticsPlugin extends Plugin
 
         $views = $this->getTotalsAll();
         foreach ($views as $path => $data) {
-            $summary = array('views' => $data, 'likes' => $this->getLikes($path));
+            $page = $pages->find($path, true);
+            $header = $page !== null ? json_decode(json_encode($page->header()), true) : [];
+            $date = array_key_exists('date', $header) ? $header['date'] : "1.1.1990";
+            $summary = array('views' => $data, 'date' => $date, 'likes' => $this->getLikesWithUsers($path), 'exists' => $page !== null);
             $views[$path] = $summary;
         }
 
@@ -247,6 +254,30 @@ class StatisticsPlugin extends Plugin
 
         if (array_key_exists($path, $this->likes_data)) {
             return count($this->likes_data[$path]);
+        }
+
+        return 0;
+    }
+
+    /**
+     * @return Array<int, Array<string>>
+     */
+    protected function getLikesWithUsers(string $path)
+    {
+        /** @var UserCollectionInterface $users */
+        $users = $this->grav['accounts'];
+        
+        if (!$this->likes_data) {
+            $this->likes_data = $this->getData($this->likes_file);
+        }
+
+        if (array_key_exists($path, $this->likes_data)) {
+            $happy_users = [];
+            foreach ($this->likes_data[$path] as $uid) {
+                array_push($happy_users, $users->find($uid, 'username')->fullname);
+            }
+
+            return array('count' => count($this->likes_data[$path]), 'users' => $happy_users);
         }
 
         return 0;

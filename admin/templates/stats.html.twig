@@ -35,12 +35,22 @@
                     <th class="likes">Likes</th>
                 </tr>
                 
-                {% for path, data in grav.twig.views %}
+                {% set sortedViews = grav.twig.views|sort((a, b) => a.date|date('U') < b.date|date('U')) %}
+                {% for path, data in sortedViews %}
+                    {% if data.exists %}
                     <tr>
                         <td class="path">{{ path }}</td>
                         <td class="views">{{ data.views }}</td>
-                        <td class="likes">{{ data.likes }}</td>
+                        <td class="likes">{{ data.likes.count }}</td>
                     </tr>
+                    <tr>
+                        <td>
+                        {% for user_fullname in data.likes.users %}
+                        {{ user_fullname }}{% if not loop.last  %}{{ ', ' }}{% endif %}
+                        {% endfor %}
+                        </td>
+                    </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
