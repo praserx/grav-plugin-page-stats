@@ -1,7 +1,7 @@
 name: Statistics
 slug: statistics
 type: plugin
-version: 1.0.0
+version: 1.1.0
 description: Adds a page statistics and like/dislike rating functionality to your site
 icon: bar-chart
 author:

@@ -1,10 +1,14 @@
 en:
   PLUGIN_STATISTICS:
     STATISTICS: Statistics
-    LIKE_IT: I like it
-    DONT_LIKE_IT: I don't like it anymore
+    NO_REACTIONS: There are no reactions yet
+    REACT: React
+    REACTION_REVERSE: I can't find it useful anymore
+    REACTION_TOOLTIP: Thanks! It is useful 
 cs:
   PLUGIN_STATISTICS:
     STATISTICS: Statistiky
-    LIKE_IT: To se mi líbí
-    DONT_LIKE_IT: Už se mi to nelíbí
+    NO_REACTIONS: Zatím žádné reakce na článek
+    REACT: Reagovat
+    REACTION_REVERSE: Už to neshledávám užitečným
+    REACTION_TOOLTIP: Díky! Tyto informace jsou pro mě užitečné 
